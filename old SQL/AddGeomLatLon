@@ -1,0 +1,52 @@
+##1. Add geom columns
+#SELECT AddGeometryColumn ('my_schema','my_table','geom',4326,'POINT',2);
+SELECT AddGeometryColumn ('SCHEMA','TABLE','geom',4326,'POINT',2);
+
+##2. create points from Lon/Lat values
+UPDATE public.losses SET geom = ST_SetSrid(
+	ST_MakePoint("lon"::float8, "lat"::float8) ,4326);
+
+	
+#Extract raster values	
+SELECT id, ST_Value(fireringmosaic.rast, 1, ca.geom) as RasterValue
+FROM fireringmosaic, ca
+WHERE ST_Intersects(fireringmosaic.rast, ca.geom)
+
+# ST_NearestValue where points may fall outside of raster bounds
+
+CREATE TABLE points_ct AS
+SELECT cacounty.gid as ct_gid, ca.gid as point_id 
+FROM cacounty, ca WHERE ST_Intersects(cacounty.geom , ca.geom);
+
+
+
+#Update County code and FL code
+UPDATE losses FL
+SET "FL" = flcounties.FL
+FROM flcounties
+WHERE ST_Contains(flcounties.geom, ST_SetSRID(ST_MakePoint("Lon"::float8, "Lat"::float8), 4326));
+
+UPDATE losses County
+SET "County" = flcounties.NAME
+FROM flcounties
+WHERE ST_Contains(flcounties.geom, ST_SetSRID(ST_MakePoint("Lon"::float8, "Lat"::float8), 4326));
+
+
+#
+CREATE TABLE add255 AS
+SELECT ST_Value(shz2018.rast, 1, loss_addresses.geom) as toadd
+FROM "13wfhs"
+JOIN loss_addresses ON ST_Intersects(shz2018.rast, loss_addresses.geom)
+
+UPDATE loss_addresses cshzll
+SET "cshzll" = addshz.toadd
+FROM addshz
+WHERE ST_Intersects(addshz.geom, ST_SetSRID(ST_MakePoint("lon"::float8, "lat"::float8), 4326));
+
+
+
+
+CREATE TABLE add255 AS
+SELECT ST_Value("13wfhs".rast, ST_Transform(ST_SetSRID(ST_MakePoint(california.lon,california.lat),4326),4326)) as toadd
+FROM "13wfhs"
+JOIN california ON ST_Intersects("13wfhs".rast, ST_SetSRID(ST_MakePoint(california.lon,california.lat),4326),4326)

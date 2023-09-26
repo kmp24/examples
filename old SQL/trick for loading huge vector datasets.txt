@@ -1,0 +1,15 @@
+
+ALTER TABLE countries
+  ALTER COLUMN geom
+  SET STORAGE EXTERNAL;
+
+-- Force the column to rewrite
+UPDATE countries
+  SET geom = ST_SetSRID(geom, 4326);
+
+-- Re-run the query  
+SELECT count(*), c.name 
+  FROM countries c 
+  JOIN places p 
+  ON ST_Intersects(c.geom, p.geom) 
+  GROUP BY c.name;

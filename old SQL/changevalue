@@ -1,0 +1,4 @@
+Update public.losses 
+SET "Lon" = '-101.594696',
+	 "Lat" = '35.669651'
+Where "Address" = '409 Llano Spur';
