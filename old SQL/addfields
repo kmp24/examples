@@ -1,2 +1,0 @@
-UPDATE public.losses SET geom = ST_SetSrid(
-	ST_MakePoint("Lon"::float8, "Lat"::float8) ,4326);
